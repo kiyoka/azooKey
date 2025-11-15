@@ -315,6 +315,51 @@ open azooKey.xcodeproj
 2. Command+Bでビルド
 3. Command+Rで実行
 
+### シミュレーターでのキーボード使用
+
+キーボード拡張を使用するには、アプリのインストール後に追加の設定が必要です：
+
+#### 1. MainAppをシミュレーターにインストール
+1. Xcodeで**MainApp**スキームを選択
+2. ターゲットデバイスでiOSシミュレーター（例: iPhone 15）を選択
+3. **Command+R**で実行
+4. アプリがシミュレーターにインストールされます
+
+#### 2. シミュレーターでキーボードを有効化
+1. シミュレーターの**設定**アプリを開く
+2. **一般** → **キーボード** → **キーボード**に移動
+3. **新しいキーボードを追加...**をタップ
+4. **サードパーティキーボード**セクションから**azooKey**を選択
+5. （オプション）**azooKey**をタップして**フルアクセスを許可**をオンにする
+
+#### 3. キーボードの切り替え
+1. メモアプリなどでテキストフィールドをタップ
+2. キーボード左下の**地球儀キー🌐**を長押し
+3. **azooKey**を選択
+4. azooKeyキーボードが表示されます
+
+#### トラブルシューティング
+
+**ソフトウェアキーボード自体が表示されない場合:**
+- **原因**: Macのハードウェアキーボードが接続されているため、ソフトウェアキーボードが表示されない
+- **解決方法**:
+  - シミュレーターのメニューバーで **I/O** → **Keyboard** → **Connect Hardware Keyboard**のチェックを外す
+  - または、シミュレーターがアクティブな状態で**Command+K**を押す
+  - これでテキストフィールドをタップすると画面下部にソフトウェアキーボードが表示されます
+
+**キーボードがリストに表示されない場合:**
+- シミュレーターのホーム画面で**azooKey**アプリアイコンが表示されているか確認
+- 表示されていない場合は、Xcodeで**MainApp**スキームを選択して再度**Command+R**
+- それでも解決しない場合：
+  - **Product** → **Clean Build Folder**（Shift+Command+K）
+  - シミュレーターをリセット: **Device** → **Erase All Content and Settings...**
+  - サブモジュールを更新: `git submodule update --init --recursive`
+  - 再度ビルド・実行
+
+**キーボードが切り替わらない場合:**
+- 地球儀キー🌐を**長押し**する（タップではなく）
+- または地球儀キーを**複数回タップ**してキーボードを順に切り替える
+
 ### テスト実行
 1. azooKeyTestsスキームを選択
 2. Command+Uでテスト実行
@@ -353,3 +398,268 @@ azooKeyプロジェクトで使用される主要な用語の対応表：
 ---
 
 *このドキュメントは、azooKeyプロジェクトの構成を理解するための包括的なガイドです。詳細な実装については、各ディレクトリ内のソースコードとドキュメントを参照してください。*
+
+## 実機への転送
+
+azooKeyをiPhone実機で動かすには、App Groupsを使用しているため、有料のApple Developer Accountとプロビジョニングプロファイルが必要です。
+
+### 前提条件
+
+- **Apple Developer Program**への登録（年間$99）
+  - App Groupsの使用には有料アカウントが必須
+  - [Apple Developer Program](https://developer.apple.com/programs/)から登録
+
+### 1. App IDの作成
+
+[Apple Developer Portal](https://developer.apple.com/account/)にログインし、**Certificates, Identifiers & Profiles**に移動：
+
+#### メインアプリ用のApp ID
+1. **Identifiers** → **+**ボタンをクリック
+2. **App IDs**を選択して続行
+3. 以下の情報を入力：
+   - Description: `azooKey Main`
+   - Bundle ID: `com.yourname.azooKey`（明示的なBundle IDを使用）
+   - Capabilities: **App Groups**にチェック
+4. **Continue**して登録
+
+#### キーボード拡張用のApp ID
+同様の手順で以下を作成：
+- Description: `azooKey Keyboard`
+- Bundle ID: `com.yourname.azooKey.Keyboard`
+- Capabilities: **App Groups**にチェック
+
+### 2. App Groupの作成
+
+1. **Identifiers**セクションで**App Groups**を選択
+2. **+**ボタンをクリック
+3. 以下の情報を入力：
+   - Description: `azooKey Keyboard Group`
+   - Identifier: `group.com.yourname.azooKey.keyboard`
+4. **Continue**して登録
+
+### 3. App GroupをApp IDに紐付け
+
+各App ID（メインアプリとキーボード拡張の両方）に対して：
+
+1. 作成したApp IDを選択
+2. **App Groups**セクションで**Configure**をクリック
+3. 先ほど作成したApp Group（`group.com.yourname.azooKey.keyboard`）を選択
+4. **Save**
+
+### 4. プロビジョニングプロファイルの作成
+
+#### 開発用プロファイル（メインアプリ）
+1. **Profiles**セクションで**+**ボタン
+2. **iOS App Development**を選択
+3. App ID: `com.yourname.azooKey`を選択
+4. Certificate: 開発用証明書を選択
+5. Devices: テスト用iPhoneを選択
+6. Profile Name: `azooKey Development`
+7. **Generate**してダウンロード
+
+#### 開発用プロファイル（キーボード拡張）
+同様の手順で`com.yourname.azooKey.Keyboard`用も作成
+
+### 5. プロジェクト設定の変更
+
+#### Bundle Identifierの変更
+
+Xcodeでプロジェクトを開き、各ターゲットのBundle Identifierを変更：
+
+**メインアプリ（MainApp）ターゲット:**
+1. プロジェクトナビゲーターで**azooKey**プロジェクトを選択
+2. **TARGETS** → **MainApp**を選択
+3. **Signing & Capabilities**タブ
+4. **Bundle Identifier**を`com.yourname.azooKey`に変更
+5. **Team**を自分のApple Developer Accountに設定
+6. **App Groups**で以下を設定：
+   - 既存の`group.com.azooKey.keyboard`を削除
+   - **+**ボタンで`group.com.yourname.azooKey.keyboard`を追加
+
+**キーボード拡張（Keyboard）ターゲット:**
+1. **TARGETS** → **Keyboard**を選択
+2. **Bundle Identifier**を`com.yourname.azooKey.Keyboard`に変更
+3. **Team**を同じApple Developer Accountに設定
+4. **App Groups**を同じ`group.com.yourname.azooKey.keyboard`に設定
+
+#### コード内のApp Group識別子を更新
+
+`AzooKeyCore/Sources/AzooKeyUtils/SharedStore.swift`を編集：
+
+```swift
+// 変更前
+public static let appGroupKey = "group.com.azooKey.keyboard"
+
+// 変更後
+public static let appGroupKey = "group.com.yourname.azooKey.keyboard"
+```
+
+#### Entitlementsファイルの更新
+
+**MainApp/azooKey.entitlements:**
+```xml
+<key>com.apple.security.application-groups</key>
+<array>
+    <string>group.com.yourname.azooKey.keyboard</string>
+</array>
+```
+
+**Keyboard/Keyboard.entitlements:**
+```xml
+<key>com.apple.security.application-groups</key>
+<array>
+    <string>group.com.yourname.azooKey.keyboard</string>
+</array>
+```
+
+### 6. 実機への転送
+
+1. iPhoneをMacに接続
+2. Xcodeで**MainApp**スキームを選択
+3. ターゲットデバイスとして接続したiPhoneを選択
+4. **Command+R**でビルド＆実行
+
+### 7. iPhoneでキーボードを有効化
+
+アプリインストール後、iPhone上で：
+
+1. **設定**アプリを開く
+2. **一般** → **キーボード** → **キーボード**に移動
+3. **新しいキーボードを追加...**をタップ
+4. サードパーティキーボードのセクションから**azooKey**を選択
+5. 必要に応じて**フルアクセスを許可**を有効化
+
+### トラブルシューティング
+
+#### 署名エラーが出る場合
+- Xcodeの**Preferences** → **Accounts**で、Apple IDが正しくログインされているか確認
+- **Automatically manage signing**のチェックを一度外して、再度有効にしてみる
+- **Product** → **Clean Build Folder**（Shift+Command+K）を実行
+
+#### App Groupエラーが出る場合
+- Developer Portalで全てのApp IDにApp Groupが正しく設定されているか確認
+- EntitlementsファイルとXcodeの設定が一致しているか確認
+- コード内の`SharedStore.appGroupKey`が正しく更新されているか確認
+
+#### "Untrusted Developer"エラーが出る場合
+iPhoneで初めて自分の証明書でビルドしたアプリを実行する場合：
+1. iPhone上で**設定** → **一般** → **VPNとデバイス管理**に移動
+2. 開発者アプリのセクションで自分のApple IDを選択
+3. **"[Apple ID]"を信頼**をタップ
+
+## ビルド時のトラブルシューティング
+
+### llama.cpp バイナリフレームワークのダウンロードエラー
+
+#### エラーメッセージ
+```
+failed downloading 'https://github.com/azooKey/llama.cpp/releases/download/b4846/signed-llama.xcframework.zip'
+which is required by binary target 'llama':
+/Users/[username]/Library/Caches/org.swift.swiftpm/artifacts/https___github_com_azooKey_llama_cpp_releases_download_b4846_signed_llama_xcframework_zip
+already exists in file system
+```
+
+#### 原因
+Swift Package Managerのキャッシュが破損しているか、古いバージョンのキャッシュが残っています。
+
+#### 解決方法
+
+**方法1: Xcodeでキャッシュをクリア（推奨）**
+
+1. Xcodeで**File** → **Packages** → **Reset Package Caches**
+2. **Product** → **Clean Build Folder**（Shift+Command+K）
+3. Xcodeを再起動
+4. プロジェクトを開いて**Command+B**でビルド
+
+**方法2: ターミナルでキャッシュを削除（より確実）**
+
+```bash
+# Xcodeを終了してから実行
+rm -rf ~/Library/Caches/org.swift.swiftpm
+rm -rf ~/Library/Developer/Xcode/DerivedData
+cd /path/to/azooKey
+rm -rf .build
+rm -rf .swiftpm
+```
+
+その後、Xcodeでプロジェクトを開き：
+1. **File** → **Packages** → **Resolve Package Versions**
+2. **Command+B**でビルド
+
+**方法3: 完全なクリーンビルド**
+
+```bash
+# プロジェクトディレクトリで実行
+cd /path/to/azooKey
+
+# 全てのキャッシュとビルド成果物を削除
+rm -rf ~/Library/Caches/org.swift.swiftpm
+rm -rf ~/Library/Developer/Xcode/DerivedData
+rm -rf .build
+rm -rf .swiftpm
+```
+
+Xcodeで以下を実行：
+1. プロジェクトを開く
+2. **File** → **Packages** → **Reset Package Caches**
+3. **File** → **Packages** → **Resolve Package Versions**
+4. **Product** → **Clean Build Folder**（Shift+Command+K）
+5. **Command+B**でビルド
+
+#### ネットワークエラーの場合
+上記で解決しない場合は、ネットワークの問題の可能性があります：
+- Wi-Fi接続を確認
+- プロキシ設定を確認
+- GitHubへのアクセスを確認: https://github.com/azooKey/llama.cpp/releases/tag/b4846
+
+## デバッグとログ出力
+
+### キーボード拡張のデバッグ
+
+キーボード拡張（`InputManager`など）のデバッグ情報をXcodeコンソールに出力する方法：
+
+#### 既存の`debug()`関数を使う（推奨）
+
+プロジェクトでは`SwiftUtils`パッケージの`debug()`関数が使用されています：
+
+```swift
+// InputManager.swiftでの使用例
+debug("InputManager.setResult: value to be input", inputData)
+debug("変換候補の数:", results.mainResults.count)
+debug("最初の候補:", results.mainResults.first?.text ?? "なし")
+```
+
+#### `os.log`を使う（より詳細なログ）
+
+```swift
+import os.log
+
+// クラス内に追加
+private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "azooKey", category: "InputManager")
+
+// 使用例
+logger.info("変換候補数: \(results.mainResults.count)")
+logger.debug("候補: \(candidate.text)")
+logger.error("エラーが発生しました")
+```
+
+#### デバッグ実行の手順
+
+1. Xcodeで**Keyboard**スキームを選択
+2. **Product** → **Scheme** → **Edit Scheme...**
+3. **Run** → **Executable**を"Ask on Launch"に設定
+4. **Command+R**で実行
+5. ダイアログで**メモ**アプリなどを選択
+6. メモアプリでazooKeyキーボードを開いて入力
+7. **Xcodeのコンソール**（View → Debug Area → Activate Console）にデバッグ出力が表示されます
+
+#### 注意事項
+- 通常の`print()`はキーボード拡張では動作しない場合があります
+- DEBUGビルドでのみデバッグ出力が有効になります
+- コンソールの検索機能を使ってキーワードでフィルタリングすると見やすくなります
+
+macMacのキーボードからシミュレーターに文字が打てるので、azooKeyのキーボードが出てきません。
+
+以下の操作で出てきました。
+  シミュレーターのメニューバーで：
+  1. I/O → Keyboard → Connect Hardware Keyboardのチェックを外す
