@@ -16,8 +16,12 @@ import KeyboardViews
 import OrderedCollections
 import SwiftUtils
 import UIKit
+import os.log
 
 final class InputManager {
+    // ログ出力用
+    private static let logger = OSLog(subsystem: "com.azooKey.keyboard", category: "InputManager")
+
     // 入力中の文字列を管理する構造体
     private(set) var composingText = ComposingText()
     // 表示される文字列を管理するクラス
@@ -305,6 +309,10 @@ final class InputManager {
     @MainActor func updatePostCompositionPredictionCandidates(candidate: Candidate) {
         let (options, denylist) = getConvertRequestOptionsForPrediction()
         var results = self.kanaKanjiConverter.requestPostCompositionPredictionCandidates(leftSideCandidate: candidate, options: options)
+        NSLog("[AKKC] updatePostCompositionPredictionCandidates: received %d prediction candidates", results.count)
+        for (index, candidate) in results.prefix(10).enumerated() {
+            NSLog("[AKKC]   [%d]: %@", index, candidate.text)
+        }
         results = self.cleaningEmojiPredictionCandidates(candidates: results, denylist: denylist)
         predictionManager.updateAfterComplete(candidate: candidate, textChangedCount: self.displayedTextManager.getTextChangedCount())
         if let updateResult {
@@ -325,6 +333,10 @@ final class InputManager {
         // 絵文字変換が無効になっている場合、予測変換からも絵文字を抜く
         let (options, denylist) = getConvertRequestOptionsForPrediction()
         var results = self.kanaKanjiConverter.requestPostCompositionPredictionCandidates(leftSideCandidate: newCandidate, options: options)
+        NSLog("[AKKC] postCompositionPredictionCandidateSelected: received %d prediction candidates", results.count)
+        for (index, candidate) in results.prefix(10).enumerated() {
+            NSLog("[AKKC]   [%d]: %@", index, candidate.text)
+        }
         results = self.cleaningEmojiPredictionCandidates(candidates: results, denylist: denylist)
         predictionManager.update(candidate: newCandidate, textChangedCount: self.displayedTextManager.getTextChangedCount())
         if let updateResult {
@@ -985,6 +997,10 @@ final class InputManager {
         let options = self.getConvertRequestOptions(inputStylePreference: inputData.input.last?.inputStyle)
         debug("InputManager.setResult: options", options)
         let results = self.kanaKanjiConverter.requestCandidates(inputData, options: options)
+        NSLog("[AKKC] setResult: received %d candidates", results.mainResults.count)
+        for (index, candidate) in results.mainResults.prefix(10).enumerated() {
+            NSLog("[AKKC]   [%d]: %@", index, candidate.text)
+        }
 
         // 表示を更新する
         if !self.isSelected {
