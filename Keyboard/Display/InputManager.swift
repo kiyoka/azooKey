@@ -310,9 +310,8 @@ final class InputManager {
         let (options, denylist) = getConvertRequestOptionsForPrediction()
         var results = self.kanaKanjiConverter.requestPostCompositionPredictionCandidates(leftSideCandidate: candidate, options: options)
         NSLog("[AKKC] updatePostCompositionPredictionCandidates: received %d prediction candidates", results.count)
-        for (index, candidate) in results.prefix(10).enumerated() {
-            NSLog("[AKKC]   [%d]: %@", index, candidate.text)
-        }
+        let candidateTexts = results.prefix(10).enumerated().map { "[\($0.offset)]: \($0.element.text)" }.joined(separator: ", ")
+        NSLog("[AKKC]   candidates: %@", candidateTexts)
         results = self.cleaningEmojiPredictionCandidates(candidates: results, denylist: denylist)
         predictionManager.updateAfterComplete(candidate: candidate, textChangedCount: self.displayedTextManager.getTextChangedCount())
         if let updateResult {
@@ -334,9 +333,8 @@ final class InputManager {
         let (options, denylist) = getConvertRequestOptionsForPrediction()
         var results = self.kanaKanjiConverter.requestPostCompositionPredictionCandidates(leftSideCandidate: newCandidate, options: options)
         NSLog("[AKKC] postCompositionPredictionCandidateSelected: received %d prediction candidates", results.count)
-        for (index, candidate) in results.prefix(10).enumerated() {
-            NSLog("[AKKC]   [%d]: %@", index, candidate.text)
-        }
+        let candidateTexts = results.prefix(10).enumerated().map { "[\($0.offset)]: \($0.element.text)" }.joined(separator: ", ")
+        NSLog("[AKKC]   candidates: %@", candidateTexts)
         results = self.cleaningEmojiPredictionCandidates(candidates: results, denylist: denylist)
         predictionManager.update(candidate: newCandidate, textChangedCount: self.displayedTextManager.getTextChangedCount())
         if let updateResult {
@@ -996,10 +994,17 @@ final class InputManager {
         debug("InputManager.setResult: value to be input", inputData)
         let options = self.getConvertRequestOptions(inputStylePreference: inputData.input.last?.inputStyle)
         debug("InputManager.setResult: options", options)
-        let results = self.kanaKanjiConverter.requestCandidates(inputData, options: options)
+        var results = self.kanaKanjiConverter.requestCandidates(inputData, options: options)
         NSLog("[AKKC] setResult: received %d candidates", results.mainResults.count)
-        for (index, candidate) in results.mainResults.prefix(10).enumerated() {
-            NSLog("[AKKC]   [%d]: %@", index, candidate.text)
+        let candidateTexts = results.mainResults.prefix(10).enumerated().map { "[\($0.offset)]: \($0.element.text)" }.joined(separator: ", ")
+        NSLog("[AKKC]   candidates: %@", candidateTexts)
+
+        // テスト: 先頭に「テスト候補」を追加
+        if let firstCandidate = results.mainResults.first {
+            var testCandidate = firstCandidate
+            testCandidate.text = "テスト候補"
+            testCandidate.isLearningTarget = false
+            results.mainResults.insert(testCandidate, at: 0)
         }
 
         // 表示を更新する

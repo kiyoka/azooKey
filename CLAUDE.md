@@ -663,3 +663,112 @@ macMacのキーボードからシミュレーターに文字が打てるので�
 以下の操作で出てきました。
   シミュレーターのメニューバーで：
   1. I/O → Keyboard → Connect Hardware Keyboardのチェックを外す
+
+毎回必ず、変換候補の先頭に、"テスト候補"を追加する実装を加えてください
+
+## ライブ変換と変換候補の表示の仕組み
+
+### 概要
+
+azooKeyには**ライブ変換（Live Conversion）**という機能があり、入力中にリアルタイムで変換結果を入力エリアに表示します。この機能により、変換候補の先頭に追加した候補が自動的に入力エリアに反映されることがあります。
+
+### 処理の流れ
+
+```
+ユーザー入力（例: "aiueo"）
+    ↓
+InputManager.setResult() が呼ばれる
+    ↓
+kanaKanjiConverter.requestCandidates() で変換候補を取得
+    ↓
+results.mainResults に候補が格納される
+    ↓
+【ここで候補を追加・変更すると影響が出る】
+    ↓
+liveConversionEnabled == true の場合:
+    ↓
+LiveConversionManager.updateWithNewResults() に results.mainResults が渡される
+    ↓
+条件に合う最初の候補が選択され、そのtextが返される
+    ↓
+DisplayedTextManager.updateComposingText() で入力エリアに表示
+```
+
+### 関連するソースコード
+
+#### InputManager.swift の setResult() (約1017-1022行目)
+```swift
+if liveConversionEnabled {
+    let liveConversionText = self.liveConversionManager.updateWithNewResults(
+        inputData,
+        results.mainResults,  // ← 変更された候補配列がそのまま渡される
+        firstClauseResults: results.firstClauseResults,
+        convertTargetCursorPosition: inputData.convertTargetCursorPosition,
+        convertTarget: inputData.convertTarget
+    )
+    self.displayedTextManager.updateComposingText(
+        composingText: self.composingText,
+        newLiveConversionText: liveConversionText  // ← これが入力エリアに表示される
+    )
+}
+```
+
+#### LiveConversionManager.swift の updateWithNewResults() (65-85行目)
+```swift
+func updateWithNewResults(_ composingText: ComposingText, _ candidates: [Candidate], ...) -> String {
+    var candidate: Candidate
+    // 条件に合う最初の候補を選択
+    if convertTargetCursorPosition > 1,
+       let firstCandidate = candidates.first(where: {
+           $0.data.map {$0.ruby}.joined().count == convertTarget.count
+       }) {
+        candidate = firstCandidate
+    } else {
+        // デフォルト候補を作成
+        candidate = .init(text: convertTarget, ...)
+    }
+    ...
+    return candidate.text  // ← この文字列が入力エリアに表示される
+}
+```
+
+### 「テスト候補」が入力エリアに表示される理由
+
+1. `setResult()`で「テスト候補」を`results.mainResults`の先頭に追加
+2. 「テスト候補」は元の候補をコピーして`text`だけ変更しているため、`data`プロパティは元のまま
+3. `updateWithNewResults()`の`candidates.first(where:)`の条件（`ruby`の長さが`convertTarget`の長さと一致）を満たす
+4. 結果として「テスト候補」が選択され、その`text`（="テスト候補"）が入力エリアに表示される
+
+### 確認方法
+
+設定でライブ変換をオフにすると、追加した候補は入力エリアには表示されず、変換候補バー（リザルトバー）にのみ表示されます。
+
+### 関連ファイル
+
+- `Keyboard/Display/InputManager.swift` - 変換リクエストと結果の処理
+- `Keyboard/Display/LiveConversionManager.swift` - ライブ変換ロジック
+- `Keyboard/Display/DisplayedTextManager.swift` - 表示テキストの管理
+
+
+> 分かりました。`ruby`の長さが`convertTarget`の長さと一致の条件を満たしているわけですね
+
+⏺ はい、その通りです。
+
+  具体的には:
+
+  // テスト候補の作成時
+  var testCandidate = firstCandidate  // ← 元の候補をコピー
+  testCandidate.text = "テスト候補"    // ← textだけ変更
+  testCandidate.isLearningTarget = false
+  // data は元のまま（rubyの情報を保持）
+
+  そのため、LiveConversionManager.updateWithNewResults()内の条件:
+
+  candidates.first(where: {
+      $0.data.map {$0.ruby}.joined().count == convertTarget.count
+  })
+
+  この条件で、dataから計算されるrubyの長さは元の候補と同じなので、「テスト候補」が条件を満たして選択されます。
+
+  もしライブ変換に影響を与えずに候補を追加したい場合は、dataのrubyを変更して条件を満たさないようにするか、ライブ変換用の候補選択とは別の箇所で候補を追加する必要があります。
+
