@@ -65,6 +65,7 @@ let package = Package(
         // MARK: For main branch, you must use `upToNextMinor` specification.
         .package(url: "https://github.com/azooKey/AzooKeyKanaKanjiConverter", revision: "fa3eeddeb8e7cfa881e725359ae6fe158b89721f", traits: ["ZenzaiCPU"]),
         .package(url: "https://github.com/azooKey/CustardKit", revision: "563635caf1213dd6b2baff63ed1b0cf254b9d78a"),
+        .package(url: "https://github.com/MacPaw/OpenAI.git", from: "0.4.6"),
     ],
     targets: [
         .target(
@@ -101,6 +102,7 @@ let package = Package(
             dependencies: [
                 "KeyboardThemes",
                 "KeyboardViews",
+                .product(name: "OpenAI", package: "OpenAI"),
             ] + (isXcodeVersion26 ? xcode26AdditionalTargetDependency : []),
             resources: [],
             swiftSettings: swiftSettings

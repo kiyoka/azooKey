@@ -101,6 +101,19 @@ public struct ResultModel {
     public mutating func resetSupplementaryCandidates() {
         self.supplementaryCandidates = []
     }
+
+    /// 候補リストの2番目（インデックス1）に候補を挿入する
+    public mutating func insertCandidateAtSecondPosition(_ candidate: any ResultViewItemData) {
+        guard !self.results.isEmpty else { return }
+        let newResultData = ResultData(id: self.results.count, candidate: candidate)
+        if self.results.count >= 2 {
+            self.results.insert(newResultData, at: 1)
+        } else {
+            self.results.append(newResultData)
+        }
+        self.updateResult.toggle()
+    }
+
     public mutating func setSelectionRequest(_ request: CandidateSelection?) {
         self.selection = switch request {
         case .none:

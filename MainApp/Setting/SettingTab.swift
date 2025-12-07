@@ -140,6 +140,10 @@ struct SettingTabView: View {
                         ZenzaiSettingView()
                     }
                     .searchKeys("Zenzai", "エフォート", "詳細設定")
+                    NavigationLink("OpenAI互換API") {
+                        OpenAICompatibleAPISettingView()
+                    }
+                    .searchKeys("OpenAI", "API", "LLM", "タイプミス", "AI変換")
                     BoolSettingView(.englishCandidate)
                         .searchKeys("英単語変換", "変換", "英語", "英語変換")
                     BoolSettingView(.typographyLetter)

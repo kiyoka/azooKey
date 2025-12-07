@@ -30,6 +30,8 @@ final class InputManager {
     // セレクトされているか否か、現在入力中の文字全体がセレクトされているかどうかである。
     // TODO: isSelectedはdisplayedTextManagerが持っているべき
     var isSelected = false
+    // LLM API呼び出し用のタスク
+    private var llmRequestTask: Task<Void, Never>?
     /// かな漢字変換を受け持つ変換器。
     @MainActor private lazy var kanaKanjiConverter = KanaKanjiConverter(dicdataStore: DicdataStore(dictionaryURL: Self.dictionaryResourceURL))
 
@@ -1010,6 +1012,89 @@ final class InputManager {
             if liveConversionEnabled, let firstClause = self.liveConversionManager.candidateForCompleteFirstClause() {
                 debug("InputManager.setResult: Complete first clause", firstClause)
                 self.complete(candidate: firstClause)
+            }
+        }
+
+        // LLM API呼び出し（1秒待機後）
+        self.triggerLLMCompletionIfEnabled(for: inputData)
+    }
+
+    /// LLM APIによる補完候補を取得する（1秒待機後に実行）
+    @MainActor private func triggerLLMCompletionIfEnabled(for inputData: ComposingText) {
+        // 前回のLLMリクエストタスクをキャンセル
+        llmRequestTask?.cancel()
+
+        // 入力が空の場合はスキップ
+        guard !inputData.convertTarget.isEmpty else { return }
+
+        let currentConvertTarget = inputData.convertTarget
+        let currentCursorPosition = inputData.convertTargetCursorPosition
+
+        llmRequestTask = Task { [weak self] in
+            do {
+                // 1秒待機（この間に新しい入力があればキャンセルされる）
+                try await Task.sleep(nanoseconds: 1_000_000_000)
+
+                // キャンセルチェック
+                try Task.checkCancellation()
+
+                // API呼び出し
+                let aiResults = try await OpenAICompatibleAPIService.shared.getCompletionCandidates(
+                    for: currentConvertTarget
+                )
+
+                // キャンセルチェック
+                try Task.checkCancellation()
+
+                // 結果が返ってきたら候補の2番目に挿入
+                await MainActor.run { [weak self] in
+                    guard let self else { return }
+                    // 入力状態が変わっていないか確認
+                    guard self.composingText.convertTarget == currentConvertTarget,
+                          self.composingText.convertTargetCursorPosition == currentCursorPosition else {
+                        debug("LLM completion skipped: stale context")
+                        return
+                    }
+                    if let firstCandidate = aiResults.candidates.first {
+                        self.insertLLMCandidateAtSecondPosition(firstCandidate, composingCount: .surfaceCount(currentCursorPosition))
+                    }
+                }
+            } catch is CancellationError {
+                // キャンセルされた場合は何もしない
+                debug("LLM completion cancelled")
+            } catch OpenAICompatibleAPIService.ServiceError.notConfigured {
+                // 設定されていない場合は何もしない
+            } catch {
+                // その他のエラーは無視（ユーザー体験を損なわない）
+                debug("LLM completion error:", error)
+            }
+        }
+    }
+
+    /// LLM候補を変換候補リストの2番目に挿入する
+    @MainActor private func insertLLMCandidateAtSecondPosition(_ text: String, composingCount: ComposingCount) {
+        let candidate = Candidate(
+            text: text,
+            value: -5,
+            composingCount: composingCount,
+            lastMid: MIDData.一般.mid,
+            data: [
+                DicdataElement(
+                    word: text,
+                    ruby: self.composingText.convertTarget.toKatakana(),
+                    cid: CIDData.固有名詞.cid,
+                    mid: MIDData.一般.mid,
+                    value: -5
+                ),
+            ],
+            actions: [],
+            inputable: true,
+            isLearningTarget: false
+        )
+
+        if let updateResult {
+            updateResult { model in
+                model.insertCandidateAtSecondPosition(candidate)
             }
         }
     }
