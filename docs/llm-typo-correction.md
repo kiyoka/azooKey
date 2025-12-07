@@ -208,9 +208,9 @@ private var llmRequestTask: Task<Void, Never>?
             let aiResults = try await OpenAICompatibleAPIService.shared.getCompletionCandidates(
                 for: currentInputData.convertTarget
             )
-            // 結果が返ってきたら候補に追加
+            // 結果が返ってきたら候補の2番目に挿入
             await MainActor.run {
-                self.appendAICandidates(aiResults.candidates)
+                self.insertAICandidateAtSecondPosition(aiResults.candidates.first)
             }
         } catch {
             // キャンセルまたはエラーは無視（ユーザー体験を損なわない）
@@ -246,10 +246,24 @@ InputManager.setResult() が呼ばれる
 │ 非同期処理                               │
 │ OpenAICompatibleAPIService               │
 │   .shared.getCompletionCandidates()      │
-│ → API応答後、候補リストに追加            │
+│ → API応答後、候補リストの2番目に挿入     │
 └─────────────────────────────────────────┘
     ↓
-変換候補バーにLLM候補が表示される
+変換候補バーの2番目にLLM候補が表示される
+```
+
+### LLM候補の挿入位置
+
+LLMで得られた変換候補は、**変換候補リストの2番目**に挿入する。
+
+**理由:**
+- 1番目（先頭）は既存のかな漢字変換エンジンが提案する最も確度の高い候補を維持
+- 2番目に挿入することで、ユーザーがLLM候補を容易に選択可能
+- ライブ変換では1番目の候補が自動適用されるため、LLM候補が意図せず確定されることを防ぐ
+
+**表示例:**
+```
+変換候補バー: [既存候補1] [LLM候補] [既存候補2] [既存候補3] ...
 ```
 
 ## 設定画面 (MainApp)
