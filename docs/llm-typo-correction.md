@@ -33,6 +33,86 @@ Swift Concurrencyの`actor`を使用したスレッドセーフな実装を採�
 
 [MacPaw/OpenAI](https://github.com/MacPaw/OpenAI)を使用してHTTPリクエスト処理を簡潔に実装する。
 
+## クラス図
+
+```mermaid
+classDiagram
+    class InputManager {
+        -composingText: ComposingText
+        -displayedTextManager: DisplayedTextManager
+        -liveConversionManager: LiveConversionManager
+        -llmRequestTask: Task~Void, Never~?
+        -kanaKanjiConverter: KanaKanjiConverter
+        +setResult()
+        -triggerLLMCompletionIfEnabled(inputData: ComposingText)
+        -insertLLMCandidateAtSecondPosition(text: String, composingCount: ComposingCount)
+    }
+
+    class OpenAICompatibleAPIService {
+        <<actor>>
+        +shared: OpenAICompatibleAPIService$
+        -currentTask: Task~CompletionResult, Error~?
+        -lastRequestTime: Date?
+        -minRequestInterval: TimeInterval
+        +getCompletionCandidates(input: String, context: String?) CompletionResult
+        +cancel()
+        -getClient() OpenAI?
+        -performRequest(client: OpenAI, input: String, context: String?) CompletionResult
+    }
+
+    class CompletionResult {
+        <<struct>>
+        +candidates: String[]
+    }
+
+    class ServiceError {
+        <<enum>>
+        notConfigured
+        apiError(Error)
+    }
+
+    class ResultModel {
+        -results: ResultData[]
+        -predictionResults: ResultData[]
+        -supplementaryCandidates: ResultData[]
+        +setResults(results: ResultViewItemData[])
+        +insertCandidateAtSecondPosition(candidate: ResultViewItemData)
+        +resetSupplementaryCandidates()
+    }
+
+    class OpenAICompatibleAPIKey {
+        <<struct>>
+        +title: LocalizedStringKey$
+        +defaultValue: String$
+        +key: String$
+        +requireFullAccess: Bool$
+        +value: String
+    }
+
+    class EnableOpenAICompatibleAPI {
+        <<struct>>
+        +title: LocalizedStringKey$
+        +defaultValue: Bool$
+        +key: String$
+        +requireFullAccess: Bool$
+    }
+
+    class OpenAICompatibleAPISettingView {
+        <<View>>
+        -enableSetting: SettingUpdater~EnableOpenAICompatibleAPI~
+        -apiKey: String
+    }
+
+    InputManager --> OpenAICompatibleAPIService : uses
+    InputManager --> ResultModel : updates
+    OpenAICompatibleAPIService --> CompletionResult : returns
+    OpenAICompatibleAPIService --> ServiceError : throws
+    OpenAICompatibleAPIService --> OpenAICompatibleAPIKey : reads
+    OpenAICompatibleAPIService --> EnableOpenAICompatibleAPI : reads
+    OpenAICompatibleAPISettingView --> OpenAICompatibleAPIKey : configures
+    OpenAICompatibleAPISettingView --> EnableOpenAICompatibleAPI : configures
+```
+
 ## コンポーネント設計
 
 ### 1. 設定キー (AzooKeyCore/Sources/AzooKeyUtils)
