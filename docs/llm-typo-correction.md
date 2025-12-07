@@ -12,7 +12,7 @@ azooKey 3.0.2では、タイプミスに対する自動修正機能がない。�
 
 ### 目標
 
-- OpenAI APIを利用してタイプミスを検出・修正
+- OpenAI互換APIを利用してタイプミスを検出・修正
 - キーボード操作をブロックせずに非同期でAPI呼び出し
 - 従量課金を考慮し、過度なAPI呼び出しを避ける
 
@@ -37,18 +37,18 @@ Swift Concurrencyの`actor`を使用したスレッドセーフな実装を採�
 
 ### 1. 設定キー (AzooKeyCore/Sources/AzooKeyUtils)
 
-#### OpenAISettingKeys.swift
+#### OpenAICompatibleAPISettingKeys.swift
 
 ```swift
 import Foundation
 import SwiftUI
 
-/// OpenAI APIキーの設定
-public struct OpenAIApiKey: KeyboardSettingKey, StoredInUserDefault {
-    public static let title: LocalizedStringKey = "OpenAI APIキー"
-    public static let explanation: LocalizedStringKey = "OpenAI APIを利用するためのAPIキーを設定します。"
+/// OpenAI Compatible API のAPIキー設定
+public struct OpenAICompatibleAPIKey: KeyboardSettingKey, StoredInUserDefault {
+    public static let title: LocalizedStringKey = "APIキー"
+    public static let explanation: LocalizedStringKey = "OpenAI互換APIを利用するためのAPIキーを設定します。"
     public static let defaultValue: String = ""
-    public static let key: String = "openai_api_key"
+    public static let key: String = "openai_compatible_api_key"
     public static let requireFullAccess: Bool = true
 
     @MainActor public static var value: String {
@@ -57,35 +57,35 @@ public struct OpenAIApiKey: KeyboardSettingKey, StoredInUserDefault {
     }
 }
 
-public extension KeyboardSettingKey where Self == OpenAIApiKey {
-    static var openAIApiKey: Self { .init() }
+public extension KeyboardSettingKey where Self == OpenAICompatibleAPIKey {
+    static var openAICompatibleAPIKey: Self { .init() }
 }
 
-/// OpenAI機能の有効/無効
-public struct EnableOpenAI: BoolKeyboardSettingKey {
-    public static let title: LocalizedStringKey = "OpenAI機能を有効化"
-    public static let explanation: LocalizedStringKey = "OpenAI APIを利用した変換候補を表示します。"
+/// OpenAI Compatible API機能の有効/無効
+public struct EnableOpenAICompatibleAPI: BoolKeyboardSettingKey {
+    public static let title: LocalizedStringKey = "OpenAI互換API機能を有効化"
+    public static let explanation: LocalizedStringKey = "OpenAI互換APIを利用した変換候補を表示します。"
     public static let defaultValue = false
-    public static let key: String = "enable_openai"
+    public static let key: String = "enable_openai_compatible_api"
     public static let requireFullAccess: Bool = true
 }
 
-public extension KeyboardSettingKey where Self == EnableOpenAI {
-    static var enableOpenAI: Self { .init() }
+public extension KeyboardSettingKey where Self == EnableOpenAICompatibleAPI {
+    static var enableOpenAICompatibleAPI: Self { .init() }
 }
 ```
 
-### 2. OpenAIService (Keyboard/Display)
+### 2. OpenAICompatibleAPIService (Keyboard/Display)
 
-#### OpenAIService.swift
+#### OpenAICompatibleAPIService.swift
 
 ```swift
 import AzooKeyUtils
 import Foundation
 import OpenAI
 
-/// OpenAI APIへのアクセスを管理するActor
-actor OpenAIService {
+/// OpenAI互換APIへのアクセスを管理するActor
+actor OpenAICompatibleAPIService {
 
     // MARK: - Types
 
@@ -100,7 +100,7 @@ actor OpenAIService {
 
     // MARK: - Singleton
 
-    static let shared = OpenAIService()
+    static let shared = OpenAICompatibleAPIService()
 
     // MARK: - Properties
 
@@ -112,8 +112,8 @@ actor OpenAIService {
 
     @MainActor
     private func getClient() -> OpenAI? {
-        @KeyboardSetting(.openAIApiKey) var apiKey
-        @KeyboardSetting(.enableOpenAI) var enabled
+        @KeyboardSetting(.openAICompatibleAPIKey) var apiKey
+        @KeyboardSetting(.enableOpenAICompatibleAPI) var enabled
         guard enabled, !apiKey.isEmpty else { return nil }
         return OpenAI(apiToken: apiKey)
     }
@@ -187,22 +187,33 @@ actor OpenAIService {
 #### InputManager.swift での呼び出し例
 
 ```swift
+// API呼び出し用のタスクを保持
+private var llmRequestTask: Task<Void, Never>?
+
 @MainActor func setResult() {
     // 既存の変換処理（同期的に即座に完了）
     let results = self.kanaKanjiConverter.requestCandidates(inputData, options: options)
 
-    // OpenAI APIは非同期で並行実行（キーボード操作をブロックしない）
-    Task {
+    // 前回のLLMリクエストタスクをキャンセル
+    llmRequestTask?.cancel()
+
+    // 約1秒の遅延後にAPI呼び出し（キーボード操作があればキャンセルされる）
+    let currentInputData = inputData
+    llmRequestTask = Task {
         do {
-            let aiResults = try await OpenAIService.shared.getCompletionCandidates(
-                for: inputData.convertTarget
+            // 1秒待機（この間に新しい入力があればキャンセルされる）
+            try await Task.sleep(nanoseconds: 1_000_000_000)
+
+            // キャンセルされていなければAPI呼び出し
+            let aiResults = try await OpenAICompatibleAPIService.shared.getCompletionCandidates(
+                for: currentInputData.convertTarget
             )
             // 結果が返ってきたら候補に追加
             await MainActor.run {
                 self.appendAICandidates(aiResults.candidates)
             }
         } catch {
-            // エラーは無視（ユーザー体験を損なわない）
+            // キャンセルまたはエラーは無視（ユーザー体験を損なわない）
         }
     }
 }
@@ -219,24 +230,31 @@ InputManager.setResult() が呼ばれる
 │ 同期処理                                 │
 │ kanaKanjiConverter.requestCandidates()   │
 │ → 既存の変換候補を即座に表示              │
+│ → 前回のLLMリクエストタスクをキャンセル    │
 └─────────────────────────────────────────┘
-    ↓                    ↓
-    │              ┌─────────────────────────────────┐
-    │              │ 非同期処理 (Task { ... })        │
-    │              │ OpenAIService.shared             │
-    │              │   .getCompletionCandidates()     │
-    │              │ → 約1秒後にAPI応答               │
-    │              │ → 候補リストに追加               │
-    │              └─────────────────────────────────┘
     ↓
 ユーザーは即座にキーボード操作を継続可能
     ↓
-API応答後、変換候補バーに追加候補が表示される
+┌─────────────────────────────────────────┐
+│ 1秒間キーボード操作なし？                 │
+├─────────────────────────────────────────┤
+│ YES → LLM API呼び出しを実行              │
+│ NO  → タスクがキャンセルされ何もしない    │
+└─────────────────────────────────────────┘
+    ↓ (YESの場合)
+┌─────────────────────────────────────────┐
+│ 非同期処理                               │
+│ OpenAICompatibleAPIService               │
+│   .shared.getCompletionCandidates()      │
+│ → API応答後、候補リストに追加            │
+└─────────────────────────────────────────┘
+    ↓
+変換候補バーにLLM候補が表示される
 ```
 
 ## 設定画面 (MainApp)
 
-### OpenAI設定画面の追加
+### OpenAI互換API設定画面の追加
 
 - APIキー入力フィールド（SecureField）
 - 機能有効/無効トグル
@@ -272,7 +290,7 @@ targets: [
 
 1. **ネットワーク依存**: オフライン時は機能しない
 2. **レイテンシ**: API応答まで約1秒の遅延がある
-3. **コスト**: OpenAI APIは従量課金のため、過度な使用に注意
+3. **コスト**: OpenAI互換APIは従量課金のため、過度な使用に注意
 4. **バイナリサイズ**: MacPaw/OpenAIライブラリ追加による増加
 
 ## 今後の拡張
