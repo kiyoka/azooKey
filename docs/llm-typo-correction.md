@@ -152,23 +152,28 @@ actor OpenAICompatibleAPIService {
     // MARK: - Private
 
     private func performRequest(client: OpenAI, input: String, context: String?) async throws -> CompletionResult {
-        let systemPrompt = "あなたは日本語入力の変換候補を提案するアシスタントです。"
+        let instructions = "あなたは日本語入力の変換候補を提案するアシスタントです。"
         let userPrompt = context != nil
             ? "文脈: \(context!)\n入力: \(input)\n最も適切な変換候補を3つ、改行区切りで出力してください。"
             : "入力: \(input)\n最も適切な変換候補を3つ、改行区切りで出力してください。"
 
         do {
-            let query = ChatQuery(
-                messages: [
-                    .system(.init(content: systemPrompt)),
-                    .user(.init(content: .string(userPrompt)))
-                ],
+            // Responses API を使用
+            let query = ResponseQuery(
                 model: .gpt5,
-                maxTokens: 100
+                input: .text(userPrompt),
+                instructions: instructions,
+                maxOutputTokens: 100
             )
 
-            let result = try await client.chats(query: query)
-            let text = result.choices.first?.message.content?.string ?? ""
+            let response = try await client.responses.create(query: query)
+
+            // レスポンスからテキストを抽出
+            let text = response.output?
+                .first(where: { $0.type == "message" })?
+                .content?
+                .first(where: { $0.type == "output_text" })?
+                .text ?? ""
 
             let candidates = text.components(separatedBy: .newlines)
                 .map { $0.trimmingCharacters(in: .whitespaces) }
