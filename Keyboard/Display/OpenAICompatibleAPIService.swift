@@ -81,9 +81,9 @@ public actor OpenAICompatibleAPIService {
         let instructions = "あなたは日本語入力の変換候補を提案するアシスタントです。"
         let userPrompt: String
         if let context {
-            userPrompt = "文脈: \(context)\n入力: \(input)\n最も適切な変換候補を3つ、改行区切りで出力してください。"
+            userPrompt = "文脈: \(context)\n入力: \(input)\n最も適切な変換候補を1つだけ出力してください。"
         } else {
-            userPrompt = "入力: \(input)\n最も適切な変換候補を3つ、改行区切りで出力してください。"
+            userPrompt = "入力: \(input)\n最も適切な変換候補を1つだけ出力してください。"
         }
 
         do {
