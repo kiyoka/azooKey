@@ -79,26 +79,29 @@ public actor OpenAICompatibleAPIService {
 
     private func performRequest(client: OpenAI, input: String, context: String?) async throws -> CompletionResult {
         let instructions = "あなたは日本語入力の変換候補を提案するアシスタントです。"
-        let userPrompt = context != nil
-            ? "文脈: \(context!)\n入力: \(input)\n最も適切な変換候補を3つ、改行区切りで出力してください。"
-            : "入力: \(input)\n最も適切な変換候補を3つ、改行区切りで出力してください。"
+        let userPrompt: String
+        if let context {
+            userPrompt = "文脈: \(context)\n入力: \(input)\n最も適切な変換候補を3つ、改行区切りで出力してください。"
+        } else {
+            userPrompt = "入力: \(input)\n最も適切な変換候補を3つ、改行区切りで出力してください。"
+        }
 
         do {
             // Chat Completions API を使用
             let query = ChatQuery(
                 messages: [
-                    .system(.init(content: instructions)),
+                    .system(.init(content: .textContent(instructions))),
                     .user(.init(content: .string(userPrompt))),
                 ],
                 model: .gpt4_o_mini,
-                maxTokens: 100
+                maxCompletionTokens: 100
             )
 
             let result = try await client.chats(query: query)
-            let text = result.choices.first?.message.content?.string ?? ""
+            let text = result.choices.first?.message.content ?? ""
 
-            let candidates = text.components(separatedBy: .newlines)
-                .map { $0.trimmingCharacters(in: .whitespaces) }
+            let candidates = text.components(separatedBy: CharacterSet.newlines)
+                .map { $0.trimmingCharacters(in: CharacterSet.whitespaces) }
                 .filter { !$0.isEmpty }
 
             return CompletionResult(candidates: candidates)

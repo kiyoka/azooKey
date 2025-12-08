@@ -9,6 +9,7 @@
 import AzooKeyUtils
 import KeyboardViews
 import SwiftUI
+import SwiftUIUtils
 
 struct OpenAICompatibleAPISettingView: View {
     @State private var showRequireFullAccessAlert = false

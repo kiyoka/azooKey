@@ -867,6 +867,22 @@
         }
       }
     },
+    "1. OpenAIのウェブサイトにアクセス" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. Go to the OpenAI website"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
+    },
     "1. 設定 → ユーザ辞書 → azooKeyユーザ辞書 を開く" : {
       "localizations" : {
         "en" : {
@@ -889,7 +905,23 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "To move one character at a time, tap the %1$@’s %2$@ section or the %3$@ section; the cursor moves one character in each direction."
+            "value" : "To move one character at a time, tap the %1$@'s %2$@ section or the %3$@ section; the cursor moves one character in each direction."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
+    },
+    "2. アカウントを作成またはログイン" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Create an account or sign in"
           }
         },
         "ja" : {
@@ -906,6 +938,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "2. Tap Add in the top right"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
+    },
+    "3. API Keysページで新しいキーを作成" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. Create a new key on the API Keys page"
           }
         },
         "ja" : {
@@ -970,6 +1018,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Android Style"
+          }
+        }
+      }
+    },
+    "APIキー" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API Key"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
+    },
+    "APIキーの取得方法" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How to get an API key"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
           }
         }
       }
@@ -1369,6 +1449,9 @@
         }
       }
     },
+    "Hotfix not found" : {
+
+    },
     "iCloudから読み込む" : {
       "localizations" : {
         "en" : {
@@ -1463,6 +1546,70 @@
         }
       }
     },
+    "OpenAI APIキーを入力してください。このキーは端末内に安全に保存されます。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter your OpenAI API key. This key is stored securely on your device."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
+    },
+    "OpenAI Platform" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenAI Platform"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
+    },
+    "OpenAI互換API" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenAI Compatible API"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
+    },
+    "OpenAI互換APIを利用して、タイプミスの修正候補を表示します。この機能にはフルアクセスが必要です。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use OpenAI Compatible API to suggest typo corrections. This feature requires Full Access."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
+    },
     "OSのユーザ辞書の利用" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1496,6 +1643,9 @@
           }
         }
       }
+    },
+    "QWERTY" : {
+
     },
     "QwertyキーボードでAaキーの代わりにシフトキーを利用します。" : {
       "extractionState" : "manual",
@@ -3379,6 +3529,9 @@
         }
       }
     },
+    "このバリエーションを削除" : {
+
+    },
     "この列を削除" : {
       "localizations" : {
         "en" : {
@@ -3835,6 +3988,7 @@
       }
     },
     "スクロール式のカスタムタブを作る" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4415,6 +4569,9 @@
         }
       }
     },
+    "デバッグ" : {
+
+    },
     "デフォルト" : {
       "localizations" : {
         "en" : {
@@ -4656,6 +4813,9 @@
         }
       }
     },
+    "バリエーションはキーを長押しすると選択できます" : {
+
+    },
     "ひらがな" : {
       "localizations" : {
         "en" : {
@@ -4849,6 +5009,9 @@
         }
       }
     },
+    "フリック" : {
+
+    },
     "フリックのキーボードでは削除%@キーを左にフリックすると、文頭まで削除することができます。" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4994,6 +5157,7 @@
       }
     },
     "フリック式のカスタムタブを作成することができます。" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5226,6 +5390,12 @@
           }
         }
       }
+    },
+    "ホットフィックス" : {
+
+    },
+    "マイグレーション状態をリセット" : {
+
     },
     "まず「テンプレートの管理」から新しいテンプレートを作成します。画面右上の%@を押して、テンプレートを追加しましょう。" : {
       "extractionState" : "manual",
@@ -5692,6 +5862,9 @@
           }
         }
       }
+    },
+    "レイアウトスタイル" : {
+
     },
     "レポートに左右の文脈を自動で含めます。左右それぞれ10文字程度まででカットされるので、すべての文章が送信されることはありません。都度、確認画面で含めないよう変更することもできます。" : {
       "extractionState" : "manual",
@@ -7608,6 +7781,9 @@
         }
       }
     },
+    "定型文タブを作る" : {
+
+    },
     "小さく表示される文字を設定します。" : {
       "localizations" : {
         "en" : {
@@ -8402,6 +8578,9 @@
         }
       }
     },
+    "日本語/英語入力用のタブをフルカスタマイズできます。" : {
+
+    },
     "日本語タブキー" : {
       "localizations" : {
         "en" : {
@@ -8976,6 +9155,7 @@
       }
     },
     "横: %lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -8984,6 +9164,9 @@
           }
         }
       }
+    },
+    "横幅: %lld" : {
+
     },
     "横方向キー数" : {
       "localizations" : {
@@ -9463,6 +9646,7 @@
       }
     },
     "登録したい文字や単語を順番に書いていくだけでスクロール式のカスタムタブを作成することができます。" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -9477,6 +9661,9 @@
           }
         }
       }
+    },
+    "登録したい文字や単語を順番に書いていくだけで定型文入力に便利なタブを作成できます。" : {
+
     },
     "登録する文字" : {
       "localizations" : {
@@ -9909,6 +10096,9 @@
         }
       }
     },
+    "編集モード" : {
+
+    },
     "編集を中止します。変更はすべて失われます。" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9948,6 +10138,7 @@
       }
     },
     "縦: %lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -9956,6 +10147,9 @@
           }
         }
       }
+    },
+    "縦幅: %lld" : {
+
     },
     "縦方向キー数" : {
       "localizations" : {
@@ -11169,6 +11363,12 @@
           }
         }
       }
+    },
+    "長押しバリエーション" : {
+
+    },
+    "長押しバリエーションが設定されている場合長押しアクションは動作しません" : {
+
     },
     "長押し後表示される画面で「大きな文字で表示する」をタップします。" : {
       "localizations" : {
