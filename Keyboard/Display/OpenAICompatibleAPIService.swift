@@ -87,18 +87,34 @@ public actor OpenAICompatibleAPIService {
         }
 
         do {
-            // Chat Completions API を使用
-            let query = ChatQuery(
-                messages: [
-                    .system(.init(content: .textContent(instructions))),
-                    .user(.init(content: .string(userPrompt))),
-                ],
-                model: .gpt4_o_mini,
-                maxCompletionTokens: 100
+            // Responses API を使用（GPT-5.1 + reasoning設定）
+            // GPT-5.1がサポートするeffortは: none, low, medium, high
+            // ライブラリにnoneがないため、lowを使用
+            let query = CreateModelResponseQuery(
+                input: .textInput(userPrompt),
+                model: "gpt-5.1",
+                instructions: instructions,
+                maxOutputTokens: 100,
+                reasoning: Components.Schemas.Reasoning(
+                    effort: .low,
+                    summary: .concise
+                )
             )
 
-            let result = try await client.chats(query: query)
-            let text = result.choices.first?.message.content ?? ""
+            let result = try await client.responses.createResponse(query: query)
+
+            // レスポンスからテキストを抽出
+            var text = ""
+            for outputItem in result.output {
+                if case .outputMessage(let outputMessage) = outputItem {
+                    for content in outputMessage.content {
+                        if case .OutputTextContent(let textContent) = content {
+                            text = textContent.text
+                            break
+                        }
+                    }
+                }
+            }
 
             let candidates = text.components(separatedBy: CharacterSet.newlines)
                 .map { $0.trimmingCharacters(in: CharacterSet.whitespaces) }
