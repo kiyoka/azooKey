@@ -103,9 +103,9 @@ public struct ResultModel {
     }
 
     /// 候補リストの2番目（インデックス1）に候補を挿入する
-    public mutating func insertCandidateAtSecondPosition(_ candidate: any ResultViewItemData) {
+    public mutating func insertCandidateAtSecondPosition(_ candidate: any ResultViewItemData, isLLMCandidate: Bool = false) {
         guard !self.results.isEmpty else { return }
-        let newResultData = ResultData(id: self.results.count, candidate: candidate)
+        let newResultData = ResultData(id: self.results.count, candidate: candidate, isLLMCandidate: isLLMCandidate)
         if self.results.count >= 2 {
             self.results.insert(newResultData, at: 1)
         } else {
@@ -153,4 +153,5 @@ public struct ResultModel {
 struct ResultData: Identifiable {
     var id: Int
     var candidate: any ResultViewItemData
+    var isLLMCandidate: Bool = false
 }

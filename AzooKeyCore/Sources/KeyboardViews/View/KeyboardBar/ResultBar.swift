@@ -114,7 +114,7 @@ struct ResultBar<Extension: ApplicationSpecificKeyboardViewExtension>: View {
                                                     )
                                                 )
                                             })
-                                            .buttonStyle(ResultButtonStyle<Extension>(height: buttonHeight, selected: .init(selection: variableStates.resultModel.selection, index: data.id)))
+                                            .buttonStyle(ResultButtonStyle<Extension>(height: buttonHeight, selected: .init(selection: variableStates.resultModel.selection, index: data.id), isLLMCandidate: data.isLLMCandidate))
                                             .contextMenu {
                                                 ResultContextMenuView(candidate: data.candidate, displayResetLearningButton: Extension.SettingProvider.canResetLearningForCandidate, index: data.id)
                                             }
@@ -132,7 +132,7 @@ struct ResultBar<Extension: ApplicationSpecificKeyboardViewExtension>: View {
                                                 .accessibilityLabel(accessibilityLabel ?? name)
                                                 .font(Design.fonts.resultViewFont(theme: theme, userSizePrefrerence: Extension.SettingProvider.resultViewFontSize))
                                         }
-                                        .buttonStyle(ResultButtonStyle<Extension>(height: buttonHeight, selected: .init(selection: variableStates.resultModel.selection, index: data.id)))
+                                        .buttonStyle(ResultButtonStyle<Extension>(height: buttonHeight, selected: .init(selection: variableStates.resultModel.selection, index: data.id), isLLMCandidate: data.isLLMCandidate))
                                         .id(data.id)
                                     }
                                 }
@@ -250,13 +250,16 @@ struct ResultButtonStyle<Extension: ApplicationSpecificKeyboardViewExtension>: B
     private let height: CGFloat
     private let userSizePreference: Double
     private let selected: SelectionState
+    private let isLLMCandidate: Bool
 
     @Environment(Extension.Theme.self) private var theme
+    @Environment(\.colorScheme) private var colorScheme
 
-    @MainActor init(height: CGFloat, selected: SelectionState = .nothing) {
+    @MainActor init(height: CGFloat, selected: SelectionState = .nothing, isLLMCandidate: Bool = false) {
         self.userSizePreference = Extension.SettingProvider.resultViewFontSize
         self.height = height
         self.selected = selected
+        self.isLLMCandidate = isLLMCandidate
     }
 
     private func background(configuration: Configuration) -> any ShapeStyle {
@@ -271,12 +274,26 @@ struct ResultButtonStyle<Extension: ApplicationSpecificKeyboardViewExtension>: B
         }
     }
 
+    private var textColor: Color {
+        if isLLMCandidate {
+            // LLM候補はグレー表示（ダークモード対応）
+            switch colorScheme {
+            case .dark:
+                Color(white: 0.65)  // ダークモード: 明るめのグレー
+            default:
+                Color(white: 0.45)  // ライトモード: 暗めのグレー
+            }
+        } else {
+            theme.resultTextColor.color
+        }
+    }
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(Design.fonts.resultViewFont(theme: theme, userSizePrefrerence: self.userSizePreference))
             .frame(height: height)
             .padding(.all, 5)
-            .foregroundStyle(theme.resultTextColor.color) // 文字色は常に不透明度1で描画する
+            .foregroundStyle(textColor)
             .background(AnyShapeStyle(background(configuration: configuration)))
             .cornerRadius(5.0)
             .compositingGroup()

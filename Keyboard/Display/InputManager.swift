@@ -1098,7 +1098,7 @@ final class InputManager {
 
         if let updateResult {
             updateResult { model in
-                model.insertCandidateAtSecondPosition(candidate)
+                model.insertCandidateAtSecondPosition(candidate, isLLMCandidate: true)
             }
         }
     }
