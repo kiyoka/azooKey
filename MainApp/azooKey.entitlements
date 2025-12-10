@@ -9,7 +9,7 @@
 	</array>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.azooKey.keyboard</string>
+		<string>group.org.sumibi.azooKey.keyboard</string>
 	</array>
 </dict>
 </plist>
