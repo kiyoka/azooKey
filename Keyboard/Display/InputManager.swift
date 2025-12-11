@@ -1068,11 +1068,51 @@ final class InputManager {
                 debug("LLM completion cancelled")
             } catch OpenAICompatibleAPIService.ServiceError.notConfigured {
                 // 設定されていない場合は何もしない
+            } catch OpenAICompatibleAPIService.ServiceError.apiError(let underlyingError) {
+                // APIエラー: エラーコードを表示（キャンセルエラーは除く）
+                let nsError = underlyingError as NSError
+                if nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled {
+                    // キャンセルエラー(-999)は正常動作のため表示しない
+                    debug("LLM completion cancelled (URLSession)")
+                    return
+                }
+                debug("LLM completion error:", underlyingError)
+                let errorCode = Self.extractErrorCode(from: underlyingError)
+                await MainActor.run { [weak self] in
+                    guard let self else { return }
+                    self.insertLLMCandidateAtSecondPosition("<<error:\(errorCode)>>", composingCount: .surfaceCount(currentCursorPosition))
+                }
             } catch {
-                // その他のエラーは無視（ユーザー体験を損なわない）
+                // その他のエラー（キャンセルエラーは除く）
+                let nsError = error as NSError
+                if nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled {
+                    // キャンセルエラー(-999)は正常動作のため表示しない
+                    debug("LLM completion cancelled (URLSession)")
+                    return
+                }
                 debug("LLM completion error:", error)
+                let errorCode = Self.extractErrorCode(from: error)
+                await MainActor.run { [weak self] in
+                    guard let self else { return }
+                    self.insertLLMCandidateAtSecondPosition("<<error:\(errorCode)>>", composingCount: .surfaceCount(currentCursorPosition))
+                }
             }
         }
+    }
+
+    /// エラーからエラーコードを抽出する
+    private static func extractErrorCode(from error: Error) -> String {
+        let nsError = error as NSError
+        // NSURLErrorDomainの場合はエラーコード（-1005など）を返す
+        if nsError.domain == NSURLErrorDomain {
+            return String(nsError.code)
+        }
+        // HTTPステータスコードを探す
+        if let statusCode = nsError.userInfo["statusCode"] as? Int {
+            return String(statusCode)
+        }
+        // その他の場合はエラーコードを返す
+        return String(nsError.code)
     }
 
     /// LLM候補を変換候補リストの2番目に挿入する
