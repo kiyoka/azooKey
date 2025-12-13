@@ -87,12 +87,12 @@ public actor OpenAICompatibleAPIService {
         }
 
         do {
-            // Responses API を使用（GPT-5.1 + reasoning設定）
-            // GPT-5.1がサポートするeffortは: none, low, medium, high
+            // Responses API を使用（GPT-5.2 + reasoning設定）
+            // GPT-5.2がサポートするeffortは: none, low, medium, high
             // ライブラリにnoneがないため、lowを使用
             let query = CreateModelResponseQuery(
                 input: .textInput(userPrompt),
-                model: "gpt-5.1",
+                model: "gpt-5.2",
                 instructions: instructions,
                 maxOutputTokens: 100,
                 reasoning: Components.Schemas.Reasoning(
