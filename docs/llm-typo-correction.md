@@ -385,6 +385,26 @@ targets: [
 2. **フルアクセス必須**: ネットワークアクセスにはフルアクセス権限が必要
 3. **キーの暗号化**: 将来的にKeychainへの移行を検討
 
+## リファクタリングなどのTODO
+
+1. LLM候補の色の定義をAzooKeyTheme型に定義する。
+2. LLM候補の色の調整を行う。以下のようなコードに沿う。
+```
+        // ポインテッド時の色を定義
+        var color: Color {
+            switch (colorScheme, theme) {
+            case (.dark, defaultTheme):
+                .systemGray4
+            case (.dark, nativeTheme):
+                .systemGray3
+            default:
+                .white
+            }
+        }
+```
+3. OpenAI互換APIの設定画面の説明の文章を相談
+4. OpenAI互換APIによるタイプミス修正の説明を、「フルアクセスについて」のページに記載するかどうか
+
 ## 制約事項
 
 1. **ネットワーク依存**: オフライン時は機能しない
