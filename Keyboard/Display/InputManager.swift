@@ -1101,7 +1101,7 @@ final class InputManager {
     }
 
     /// エラーからエラーコードを抽出する
-    private static func extractErrorCode(from error: Error) -> String {
+    private static func extractErrorCode(from error: any Error) -> String {
         let nsError = error as NSError
         // NSURLErrorDomainの場合はエラーコード（-1005など）を返す
         if nsError.domain == NSURLErrorDomain {

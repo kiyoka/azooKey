@@ -21,7 +21,7 @@ public actor OpenAICompatibleAPIService {
 
     public enum ServiceError: Error, Sendable {
         case notConfigured
-        case apiError(Error)
+        case apiError(any Error)
     }
 
     // MARK: - Singleton
@@ -30,7 +30,7 @@ public actor OpenAICompatibleAPIService {
 
     // MARK: - Properties
 
-    private var currentTask: Task<CompletionResult, Error>?
+    private var currentTask: Task<CompletionResult, any Error>?
     private var lastRequestTime: Date?
     private let minRequestInterval: TimeInterval = 0.3
 
