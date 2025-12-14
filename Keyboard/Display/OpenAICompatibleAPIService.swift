@@ -78,12 +78,25 @@ public actor OpenAICompatibleAPIService {
     // MARK: - Private
 
     private func performRequest(client: OpenAI, input: String, context: String?) async throws -> CompletionResult {
-        let instructions = "あなたは日本語入力の変換候補を提案するアシスタントです。"
+        // SIMPLE_PROMPT_V2
+        let instructions = ""
         let userPrompt: String
         if let context {
-            userPrompt = "文脈: \(context)\n入力: \(input)\n最も適切な変換候補を1つだけ出力してください。"
+            userPrompt = """
+            文脈: \(context)
+
+            以下はタイプミスを含む可能性があるローマ字入力です。正しい日本語（漢字仮名交じり）に変換してください。
+            変換結果のみを出力し、説明は不要です。
+
+            \(input)
+            """
         } else {
-            userPrompt = "入力: \(input)\n最も適切な変換候補を1つだけ出力してください。"
+            userPrompt = """
+            以下はタイプミスを含む可能性があるローマ字入力です。正しい日本語（漢字仮名交じり）に変換してください。
+            変換結果のみを出力し、説明は不要です。
+
+            \(input)
+            """
         }
 
         do {
