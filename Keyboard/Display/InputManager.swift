@@ -1042,9 +1042,15 @@ final class InputManager {
                 // キャンセルチェック
                 try Task.checkCancellation()
 
+                // 文脈を取得（カーソルの前のテキストを文脈として使用）
+                let (leftText, _, _) = await self?.getSurroundingText() ?? ("", "", "")
+                // 文脈が長すぎる場合は末尾の200文字のみ使用
+                let context = leftText.isEmpty ? nil : String(leftText.suffix(200))
+
                 // API呼び出し
                 let aiResults = try await OpenAICompatibleAPIService.shared.getCompletionCandidates(
-                    for: currentConvertTarget
+                    for: currentConvertTarget,
+                    context: context
                 )
 
                 // キャンセルチェック
