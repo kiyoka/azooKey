@@ -105,6 +105,12 @@ public struct ResultModel {
     /// 候補リストの2番目（インデックス1）に候補を挿入する
     public mutating func insertCandidateAtSecondPosition(_ candidate: any ResultViewItemData, isLLMCandidate: Bool = false) {
         guard !self.results.isEmpty else { return }
+
+        // 既存のLLM候補を削除（ローディング表示や古いLLM候補を置き換える）
+        if isLLMCandidate {
+            self.results.removeAll { $0.isLLMCandidate }
+        }
+
         let newResultData = ResultData(id: self.results.count, candidate: candidate, isLLMCandidate: isLLMCandidate)
         if self.results.count >= 2 {
             self.results.insert(newResultData, at: 1)

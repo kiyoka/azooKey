@@ -1036,8 +1036,8 @@ final class InputManager {
 
         llmRequestTask = Task { [weak self] in
             do {
-                // 1秒待機（この間に新しい入力があればキャンセルされる）
-                try await Task.sleep(nanoseconds: 1_000_000_000)
+                // 2秒待機（この間に新しい入力があればキャンセルされる）
+                try await Task.sleep(nanoseconds: 2_000_000_000)
 
                 // キャンセルチェック
                 try Task.checkCancellation()
@@ -1046,6 +1046,12 @@ final class InputManager {
                 let (leftText, _, _) = await self?.getSurroundingText() ?? ("", "", "")
                 // 文脈が長すぎる場合は末尾の200文字のみ使用
                 let context = leftText.isEmpty ? nil : String(leftText.suffix(200))
+
+                // ローディング候補を挿入（選択不可）
+                await MainActor.run { [weak self] in
+                    guard let self else { return }
+                    self.insertLLMCandidateAtSecondPosition("⚡ AI変換中...", composingCount: .surfaceCount(currentCursorPosition), inputable: false)
+                }
 
                 // API呼び出し
                 let aiResults = try await OpenAICompatibleAPIService.shared.getCompletionCandidates(
@@ -1122,7 +1128,7 @@ final class InputManager {
     }
 
     /// LLM候補を変換候補リストの2番目に挿入する
-    @MainActor private func insertLLMCandidateAtSecondPosition(_ text: String, composingCount: ComposingCount) {
+    @MainActor private func insertLLMCandidateAtSecondPosition(_ text: String, composingCount: ComposingCount, inputable: Bool = true) {
         let candidate = Candidate(
             text: text,
             value: -5,
@@ -1138,7 +1144,7 @@ final class InputManager {
                 ),
             ],
             actions: [],
-            inputable: true,
+            inputable: inputable,
             isLearningTarget: false
         )
 
