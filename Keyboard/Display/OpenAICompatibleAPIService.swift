@@ -133,6 +133,11 @@ public actor OpenAICompatibleAPIService {
                 .map { $0.trimmingCharacters(in: CharacterSet.whitespaces) }
                 .filter { !$0.isEmpty }
 
+            // 候補が空の場合は「AI候補なし」を返す
+            if candidates.isEmpty {
+                return CompletionResult(candidates: ["<AI候補なし>"])
+            }
+
             return CompletionResult(candidates: candidates)
         } catch {
             throw ServiceError.apiError(error)
