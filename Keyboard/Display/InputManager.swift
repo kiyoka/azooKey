@@ -1027,9 +1027,10 @@ final class InputManager {
         // 入力が空の場合はスキップ
         guard !inputData.convertTarget.isEmpty else { return }
 
-        // QWERTY（ローマ字入力）のときだけLLM APIを呼び出す
+        // QWERTY（ローマ字入力）と英数入力のときLLM APIを呼び出す
         // フリック入力ではタイプミスが発生しにくいため不要
-        guard inputData.input.last?.inputStyle == .roman2kana else { return }
+        guard let inputStyle = inputData.input.last?.inputStyle,
+              inputStyle == .roman2kana || inputStyle == .direct else { return }
 
         let currentConvertTarget = inputData.convertTarget
         let currentCursorPosition = inputData.convertTargetCursorPosition

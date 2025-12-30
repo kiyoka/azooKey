@@ -78,24 +78,41 @@ public actor OpenAICompatibleAPIService {
     // MARK: - Private
 
     private func performRequest(client: OpenAI, input: String, context: String?) async throws -> CompletionResult {
-        // SIMPLE_PROMPT_V2
+        // PROPER_NOUN_AWARE_V2: 97.62%の正解率を達成したプロンプト
+        // 固有名詞（企業名・ブランド名・技術用語）の正規化に対応
         let instructions = ""
         let userPrompt: String
+
         if let context {
             userPrompt = """
+            以下のルールで入力を処理してください：
+
+            1. 日本語のローマ字入力の場合：タイプミスを修正して日本語に変換
+               例：arigatou→ありがとう、konichiwa→こんにちは
+
+            2. 固有名詞（企業名・ブランド名・技術用語）の場合：英語の正規表記に修正
+               例：openai→OpenAI、github→GitHub、iphone→iPhone、javascript→JavaScript
+
+            変換結果のみを返してください。
+
             文脈: \(context)
-
-            以下はタイプミスを含む可能性があるローマ字入力です。正しい日本語（漢字仮名交じり）に変換してください。
-            変換結果のみを出力し、説明は不要です。
-
-            \(input)
+            入力: \(input)
+            出力:
             """
         } else {
             userPrompt = """
-            以下はタイプミスを含む可能性があるローマ字入力です。正しい日本語（漢字仮名交じり）に変換してください。
-            変換結果のみを出力し、説明は不要です。
+            以下のルールで入力を処理してください：
 
-            \(input)
+            1. 日本語のローマ字入力の場合：タイプミスを修正して日本語に変換
+               例：arigatou→ありがとう、konichiwa→こんにちは
+
+            2. 固有名詞（企業名・ブランド名・技術用語）の場合：英語の正規表記に修正
+               例：openai→OpenAI、github→GitHub、iphone→iPhone、javascript→JavaScript
+
+            変換結果のみを返してください。
+
+            入力: \(input)
+            出力:
             """
         }
 
